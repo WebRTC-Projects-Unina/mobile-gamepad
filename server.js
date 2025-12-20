@@ -13,7 +13,7 @@ const io = new Server(httpServer, {
   }
 });
 
-//app.use(express.static(path.join(__dirname, "client/build")));  //gemini dice di usarlo, ancora non so comes
+app.use(express.static(path.join(__dirname, "client/build")));  //gemini dice di usarlo, ancora non so comes
 
 io.on("connection", (socket) => {
   console.log("Nuova connessione stabilita");
@@ -39,8 +39,8 @@ io.on("connection", (socket) => {
   // In fase di negoziazione, il server inoltra i messaggi all'altro peer
   socket.on("negotiation", (data) => {
     // data = {roomID, type, payload}
-    socket.to(roomID).emit("negotiation", data);
-    console.log("Inoltrato {", data, "}");
+    socket.to(data.roomID).emit("negotiation", data);
+    console.log("Inoltrato ", data.type, " in ", data.roomID);
   });
 
   socket.on("disconnect", () => {
