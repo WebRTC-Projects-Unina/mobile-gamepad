@@ -1,0 +1,29 @@
+{
+  "name": "mobile-gamepad",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebRTC-Projects-Unina/mobile-gamepad.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/WebRTC-Projects-Unina/mobile-gamepad/issues"
+  },
+  "homepage": "https://github.com/WebRTC-Projects-Unina/mobile-gamepad#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
