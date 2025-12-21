@@ -1,0 +1,227 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* LAYOUT GENERALE */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #20232a;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.content-wrapper {
+  width: 100%;
+  max-width: 800px; /* Contenitore centrale */
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* TIPOGRAFIA & ELEMENTI COMUNI */
+.page-title {
+  font-size: 3rem;
+  margin-bottom: 30px;
+  color: #61dafb; /* React Blue */
+}
+
+.loading-text {
+  font-size: 1.5rem;
+  color: #aaa;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+/* COMPONENTI SPECIFICI HOST */
+.status-card {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  padding: 20px 40px;
+  border-radius: 10px;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: center;
+  min-width: 300px;
+}
+
+.status-text {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.status-indicator {
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.socket-id {
+  display: block;
+  margin-top: 5px;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+/* QR CODE SECTION */
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.qr-title {
+  margin-bottom: 20px;
+  font-weight: normal;
+}
+
+.qr-background {
+  padding: 20px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.session-id-display {
+  margin-top: 25px;
+  font-size: 2rem;
+  letter-spacing: 8px;
+  font-family: monospace;
+  background-color: rgba(0,0,0,0.3);
+  padding: 10px 20px;
+  border-radius: 8px;
+}
+
+/* --- ANIMAZIONI --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- CONTROLLER SPECIFIC --- */
+.error-card {
+  background-color: rgba(255, 87, 34, 0.1);
+  border: 2px solid #ff5722;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.error-title {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #ff8a65;
+}
+
+.error-text {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.instruction-box {
+  background-color: rgba(0,0,0,0.3);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* Stato connessione controller */
+.controller-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite;
+}
+
+.highlight {
+  color: #61dafb;
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- QR CODE COMPONENT --- */
+.qr-component-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.qr-info-text {
+  margin-top: 20px;
+  color: #333; /* Grigio scuro (leggibile su sfondo bianco) */
+  word-break: break-all;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 90%;
+}
+
+.qr-link {
+  color: #007bff; /* Blu standard per i link */
+  text-decoration: none;
+  font-weight: bold;
+  display: block;
+  margin-top: 5px;
+  transition: opacity 0.2s;
+}
+
+.qr-link:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}

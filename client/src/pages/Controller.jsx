@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from 'react-router-dom';
+import PageLayout from "../components/PageLayout";
 import socket from "../services/socket";
 import webrtc from "../services/webrtc";
 
@@ -56,101 +57,45 @@ const Controller = () => {
         }
     }, [roomID]);
 
-    const styles = {
-        container: {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            backgroundColor: '#20232a', 
-            color: 'white',
-            fontFamily: 'Arial, sans-serif',
-            padding: '20px',
-            textAlign: 'center'
-        },
-        errorCard: {
-            backgroundColor: 'rgba(255, 87, 34, 0.1)', 
-            border: '2px solid #ff5722',
-            borderRadius: '15px',
-            padding: '30px',
-            maxWidth: '400px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
-        },
-        icon: {
-            fontSize: '4rem',
-            marginBottom: '20px',
-            display: 'block'
-        },
-        title: {
-            fontSize: '1.8rem',
-            marginBottom: '15px',
-            color: '#ff8a65'
-        },
-        text: {
-            fontSize: '1.1rem',
-            lineHeight: '1.6',
-            color: '#e0e0e0',
-            marginBottom: '20px'
-        },
-        instruction: {
-            backgroundColor: 'rgba(0,0,0,0.3)',
-            padding: '15px',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            color: '#aaa'
-        },
-        // Stili per lo stato "Pronto" (Placeholder)
-        loadingContainer: {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-        },
-        loadingText: {
-            fontSize: '1.5rem',
-            marginTop: '20px',
-            color: '#61dafb'
-        }
-    };
-
     // Accesso diretto senza ID (Errore)
-    if (!roomID) {
+    if (!roomID) { 
         return (
-            <div style={styles.container}>
-                <div style={styles.errorCard}>
-                    <h2 style={styles.title}>Accesso Negato</h2>
-                    <p style={styles.text}>
+            <PageLayout>
+                <div className="error-card">
+                    <span className="error-icon">⚠️</span>
+                    <h2 className="error-title">Accesso Negato</h2>
+                    <p className="error-text">
                         Non puoi accedere a questa pagina direttamente. 
                         Manca l'ID della sessione.
                     </p>
-                    <div style={styles.instruction}>
+                    <div className="instruction-box">
                         <strong>Come risolvere:</strong><br/>
                         Apri la pagina <u>Host</u> sul tuo PC e scansiona il 
                         <strong> QR Code</strong> con la fotocamera.
                     </div>
                 </div>
-            </div>
-        );
+            </PageLayout>
+        ); 
     }
 
-    // Accesso con ID 
-    // PLACEHOLDER VA FINITO
-    return ( 
-        <div style={styles.container}>
-            <div style={styles.loadingContainer}>
-                <div style={{ fontSize: '3rem' }}>📱</div>
-                <h2 style={styles.loadingText}>Controller Mobile</h2>
-                <p style={{ color: '#aaa', marginTop: '10px' }}>
-                    Stato: <strong style={{color: '#61dafb'}}>{connectionStep}</strong>
-                </p>
-                
-                {/* Se la connessione è completa, i Data Channel si apriranno.
-                   Puoi controllare la console del browser per vedere:
-                   "Canale 'fast_input' APERTO"
-                   "Canale 'reliable_control' APERTO"
-                */}
+    // PLACEHOLDER
+    return (
+        <PageLayout>
+            <div className="controller-icon">📱</div>
+            <h2 className="page-title" style={{ fontSize: '2rem' }}>Controller Mobile</h2>
+            
+            <p className="loading-text" style={{ marginTop: 0 }}>
+                Stato: <span className="highlight">{connectionStep}</span>
+            </p>
+            
+            <p style={{ color: '#555', marginTop: '10px' }}>
+                Room ID: <strong>{roomID}</strong>
+            </p>
+            
+            <div style={{ marginTop: '30px', fontSize: '0.8rem', color: '#666' }}>
+                (L'interfaccia di gioco apparirà qui dopo la connessione P2P)
             </div>
-        </div>
+        </PageLayout>
     );
 };
 

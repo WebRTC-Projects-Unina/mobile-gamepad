@@ -4,6 +4,7 @@ import Host from "./pages/Host"
 import Controller from "./pages/Controller"
 import LandingPage from './pages/LandingPage';
 import AutoLandingPage from './pages/AutoLandingPage';
+import "./App.css";
 
 function App() {
     return (
