@@ -43,30 +43,105 @@ const Host = () => {
         };
     }, []);
 
+    const styles = {
+        container: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+            backgroundColor: '#20232a', // Stesso colore della Landing Page
+            color: 'white',
+            fontFamily: 'Arial, sans-serif'
+        },
+        header: {
+            fontSize: '3rem',
+            marginBottom: '30px',
+            color: '#61dafb' // Accento azzurro React (o bianco se preferisci)
+        },
+        statusCard: {
+            backgroundColor: 'rgba(255, 255, 255, 0.1)', // Effetto vetro leggero
+            padding: '20px 40px',
+            borderRadius: '10px',
+            marginBottom: '40px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            textAlign: 'center',
+            backdropFilter: 'blur(5px)'
+        },
+        statusText: {
+            fontSize: '1.2rem',
+            marginBottom: '10px'
+        },
+        statusIndicator: {
+            color: status.includes("Connesso") ? '#4caf50' : '#ff6b6b', // Verde o Rosso (toni pastello per dark mode)
+            fontWeight: 'bold',
+            marginLeft: '10px'
+        },
+        socketId: {
+            display: 'block',
+            marginTop: '5px',
+            color: '#aaa',
+            fontSize: '0.9rem'
+        },
+        qrContainer: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            animation: 'fadeIn 0.5s ease-in'
+        },
+        qrBackground: {
+            padding: '20px',
+            backgroundColor: 'white',
+            borderRadius: '15px',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
+        },
+        idText: {
+            marginTop: '25px',
+            fontSize: '2rem',
+            letterSpacing: '8px',
+            fontFamily: 'monospace',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            padding: '10px 20px',
+            borderRadius: '8px'
+        },
+        loadingText: {
+            fontSize: '1.5rem',
+            color: '#aaa',
+            fontStyle: 'italic'
+        }
+    };
+
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial" }}>
-            <h2>Modulo HOST (PC)</h2>
+        <div style={styles.container}>
+            <h1 style={styles.header}>Modulo HOST (PC)</h1>
             
-            <div style={{ marginBottom: "20px", padding: "10px", border: "1px solid #ccc" }}>
-                <strong>Stato Socket:</strong> <span style={{ color: status.includes("Connesso") ? "green" : "red" }}>{status}</span>
-                <br />
-                <small>Socket ID: {socketID}</small>
+            <div style={styles.statusCard}>
+                <div style={styles.statusText}>
+                    <strong>Stato Socket:</strong> 
+                    <span style={styles.statusIndicator}>{status}</span>
+                </div>
+                {socketID && <small style={styles.socketId}>Socket ID: {socketID}</small>}
             </div>
 
             {roomID ? (
-                <div style={{ textAlign: "center", marginTop: "50px" }}>
-                    <h3>Scansiona questo qr per connetterti:</h3>
-                    <QRCodeDisplay roomId={roomID} />
+                <div style={styles.qrContainer}>
+                    <h3 style={{ marginBottom: '20px', fontWeight: 'normal' }}>
+                        Scansiona per connetterti
+                    </h3>
+                    
+                    <div style={styles.qrBackground}>
+                        <QRCodeDisplay roomId={roomID} />
+                    </div>
             
-                    <div style={{ marginTop: '20px', fontSize: '24px', letterSpacing: '5px' }}>
-                        ID: <strong>{roomID}</strong>
+                    <div style={styles.idText}>
+                        {roomID}
                     </div>
                 </div>
             ) : (
-                <p>Generazione stanza in corso...</p>
+                <p style={styles.loadingText}>Generazione stanza in corso...</p>
             )}
         </div>
-    ); 
+    );
 };
 
 export default Host;
