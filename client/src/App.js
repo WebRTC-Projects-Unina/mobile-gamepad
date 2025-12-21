@@ -11,7 +11,8 @@ function App() {
             <div className='App'>
                 <Routes>
                     <Route path="/" element={<AutoLandingPage />} />
-                    {/* <Route path="/" element={<LandingPage />} /> */}
+                    
+                    <Route path="/debug" element={<LandingPage />} /> 
 
                     <Route path='/host' element = { <Host />} />
 

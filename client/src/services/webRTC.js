@@ -1,9 +1,12 @@
 class WebRTCService {
     constructor() {
         this.peerConnection = null;
-        this.dataChannel = null;        // Canale per i dati veloci
-        this.controlChannel = null;     // Canale per i comandi critici
-        
+        this.dataChannels = {
+            fast: null,     // simil UDP, per azioni continue (es: movimento)
+            reliable: null  // simil TCP, per azioni critiche (es: sparare)
+        };
+        this.localStream = null; // Stream audio locale
+
         this.config = {
             iceServers: [
                 { urls: "stun:stun.l.google.com:19302" },
@@ -12,63 +15,131 @@ class WebRTCService {
         };
     }
 
-    initPeerConnection(onIceCandidate, onTrack) {
+    /**
+     * Inizializza la RTCPeerConnection.
+     * @param {Function} onIceCandidate - Callback per inviare i candidati al signaling server
+     * @param {Function} onTrack - (Opzionale) Callback quando arriva uno stream audio remoto (Host)
+     * @param {Function} onDataChannelMsg - (Opzionale) Callback quando arrivano dati
+    */
+    initPeerConnection(onIceCandidate, onTrack, onDataChannelMsg) {
+        if (this.peerConnection) this.close();
+
         this.peerConnection = new RTCPeerConnection(this.config);
 
-        // Gestione candidati ICE (Trickle ICE)
+        // Gestione ICE Candidates (da inviare all'altro peer)
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
                 onIceCandidate(event.candidate);
             }
         };
 
-        // Gestione stream audio in arrivo (Lato Host)
-        this.peerConnection.ontrack = (event) => {
-            if (onTrack) onTrack(event.streams[0]);
-        };
-    }
-    
-    // Chiamato dall'Host
-    createDataChannels() {
-        if (!this.peerConnection) return;
+        if (onTrack) {
+            this.peerConnection.ontrack = (event) => {
+                console.log("Stream audio ricevuto!");
+                onTrack(event.streams[0]);
+            };
+        }
 
-        // Canale fast simil UDP, per informazioni in costante aggiornamento (movimento, etc)
-        this.dataChannel = this.peerConnection.createDataChannel("fast", {
-            ordered: false,
-            maxRetransmits: 0
-        });
-
-        // Canale reliable simil TCP, per pressioni di tasti critici (tasti azione)
-        this.controlChannel = this.peerConnection.createDataChannel("reliable");
-    }
-
-    // Chiamato dal Controller per agganciarsi ai canali creati dall'Host
-    setupDataChannelListeners(onMessage) {
+        // 5. Gestione Data Channel in ingresso (Solo chi NON crea i canali, es. Controller se Host li crea)
+        // Nota: Nel nostro caso l'Host crea i canali, il Controller li riceve qui.
         this.peerConnection.ondatachannel = (event) => {
             const channel = event.channel;
-            // Imposta il listener per ricevere i messaggi
-            channel.onmessage = (msg) => onMessage(channel.label, msg.data);
+            console.log(`Data Channel ricevuto: ${channel.label}`);
+            
+            this.setupChannelListeners(channel, onDataChannelMsg);
+
+            // Salviamo il riferimento per poter rispondere se necessario
+            if (channel.label === "fast") this.dataChannels.fast = channel;
+            if (channel.label === "reliable") this.dataChannels.reliable = channel;
         };
     }
 
-    // Invia dati sul canale appropriato
-    sendData(type, payload) {
-        const json = JSON.stringify(payload);
-        // Se è un movimento continuo -> usa canale veloce
-        if (type === "fast" && this.dataChannel?.readyState === "open") {
-            this.dataChannel.send(json);
-        } 
-        // Se è un click importante -> usa canale affidabile
-        else if (type === "reliable" && this.controlChannel?.readyState === "open") {
-            this.controlChannel.send(json);
+  
+
+    /**
+     * Crea i canali dati. Deve essere chiamato dall'OFFERER (Host) prima di createOffer.
+     * @param {Function} onMessage - Callback per gestire i messaggi in arrivo
+     */
+    createDataChannels(onMessage) {
+        if (!this.peerConnection) return;
+
+        this.dataChannels.fast = this.peerConnection.createDataChannel("fast", {
+            ordered: false,
+            maxRetransmits: 0 
+        });
+        this.setupChannelListeners(this.dataChannels.fast, onMessage);
+
+        this.dataChannels.reliable = this.peerConnection.createDataChannel("reliable", {
+            ordered: true
+        });
+        this.setupChannelListeners(this.dataChannels.reliable, onMessage);
+    }
+
+    /**
+     * Configura i listener open, close, message (per comodità parsa anche il json)
+     */
+    setupChannelListeners(channel, onMessage) {
+        channel.onopen = () => console.log(`Canale '${channel.label}' APERTO`);
+        channel.onclose = () => console.log(`Canale '${channel.label}' CHIUSO`);
+        
+        if (onMessage) {
+            channel.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    onMessage(channel.label, data);
+                } catch (e) {
+                    console.error("Errore parsing dati WebRTC:", e);
+                }
+            };
         }
     }
 
-    // Metodi per handshake, creano il payload da condividere con socket.io per fare la negoziazione iniziale 
+    /**
+     * Invia dati sul canale specificato.
+     * @param {string} type - 'fast' o 'reliable'
+     * @param {object} payload - Oggetto dati da inviare
+     */
+    sendData(type, payload) {
+        const channel = this.dataChannels[type];
+        if (channel && channel.readyState === "open") {
+            channel.send(JSON.stringify(payload));
+        } else {
+            // console.warn(`Canale ${type} non pronto per l'invio.`);
+        }
+    }
+
+    // Chiede il permesso per il microfono e aggiunge la traccia alla connessione
+    async startAudioStream() {
+        try {
+            this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            
+            this.localStream.getTracks().forEach((track) => {
+                // Aggiunge la traccia alla peer connection esistente
+                this.peerConnection.addTrack(track, this.localStream);
+            });
+            console.log("Microfono acquisito e aggiunto allo stream.");
+            return true;
+        } catch (err) {
+            console.error("Errore accesso microfono:", err);
+            return false;
+        }
+    }
+
+    toggleAudio(isEnabled) {
+        if (this.localStream) {
+            this.localStream.getAudioTracks().forEach(track => {
+                track.enabled = isEnabled; // Mute/Unmute hardware
+            });
+        }
+    }
+
+    
+    // --- HANDSHAKE JSEP (Offer/Answer) ---
+
     async createOffer() {
         const offer = await this.peerConnection.createOffer();
         await this.peerConnection.setLocalDescription(offer);
-        return offer;   // Da mandare con socket.io
+        return offer;
     }
 
     async createAnswer(offerSDP) {
@@ -83,16 +154,31 @@ class WebRTCService {
     }
 
     async addIceCandidate(candidate) {
-        if (this.peerConnection) {
-            await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        try {
+            if (this.peerConnection && this.peerConnection.remoteDescription) {
+                await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+        } catch (e) {
+            console.error("Errore aggiunta ICE Candidate:", e);
         }
     }
-    
-    // Aggiunge lo stream audio (Microfono)
-    addLocalStream(stream) {
-        stream.getTracks().forEach(track => {
-            this.peerConnection.addTrack(track, stream);
-        });
+
+    // Cleanup: chiudi data channels, ferma audio stream, chiudi connessione p2p e resetta lo stato
+    close() {
+        if (this.dataChannels.fast) this.dataChannels.fast.close();
+        if (this.dataChannels.reliable) this.dataChannels.reliable.close();
+
+        if (this.localStream) {
+            this.localStream.getTracks().forEach(track => track.stop());
+            this.localStream = null;
+        }
+
+        if (this.peerConnection) {
+            this.peerConnection.close();
+            this.peerConnection = null;
+        }
+        
+        this.dataChannels = { fast: null, reliable: null };
     }
 }
 
