@@ -17,7 +17,7 @@ const io = new Server(httpServer, {
     }
 });
 
-app.use(express.static(path.join(__dirname, "client/build")));  //gemini dice di usarlo, ancora non so come
+app.use(express.static(path.join(__dirname, "client/build")));
 
 io.on("connection", (socket) => {
     console.log("Nuova connessione stabilita");
@@ -45,6 +45,11 @@ io.on("connection", (socket) => {
         // data = {roomID, type, payload}
         socket.to(data.roomID).emit("negotiation", data);
         console.log("Inoltrato ", data.type, " in ", data.roomID);
+    });
+
+    // Avvisa l'host se il controller cade
+    socket.on("controllerDisconnected", (roomID) => {
+        socket.to(roomID).emit("controllerDisconnected");
     });
 
     socket.on("disconnect", () => {

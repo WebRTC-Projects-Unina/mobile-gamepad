@@ -1,9 +1,60 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from 'react-router-dom';
+import socket from "../services/socket";
+import webrtc from "../services/webrtc";
 
 const Controller = () => {
     const [searchParams] = useSearchParams();
-    const roomId = searchParams.get('room');
+    const roomID = searchParams.get('room');
+    const [connectionStep, setConnectionStep] = useState("Inizializzazione...");
+
+    useEffect( () => {
+        if(!roomID) {
+          return;   // Mostra il messaggio di errore ma non fare niente
+        }
+        socket.connect();
+        socket.on("connect", () => {
+            socket.emit("joinRoom", roomID);
+        });
+
+        socket.on("controllerConnected", () => {
+            setConnectionStep("In attesa dell'Host...");
+        });
+
+        socket.on("negotiation", async (data) => {
+            if (data.type === "offer") {
+                setConnectionStep("Negoziazione P2P in corso...");
+                
+                webrtc.initPeerConnection((candidate) => {
+                    socket.emit("negotiation", { 
+                        roomID, 
+                        type: "candidate", 
+                        payload: candidate 
+                    });
+                });
+
+                const answer = await webrtc.createAnswer(data.payload);
+                
+                socket.emit("negotiation", { 
+                    roomID, 
+                    type: "answer", 
+                    payload: answer 
+                });
+            } 
+            else if (data.type === "candidate") {
+                await webrtc.addIceCandidate(data.payload);
+            }
+        });
+
+        return () => {
+            socket.emit("controllerDisconnected", roomID);
+            socket.off("connect");
+            socket.off("controllerConnected");
+            socket.off("negotiation");
+            socket.disconnect();
+            webrtc.close();
+        }
+    }, [roomID]);
 
     const styles = {
         container: {
@@ -63,7 +114,7 @@ const Controller = () => {
     };
 
     // Accesso diretto senza ID (Errore)
-    if (!roomId) {
+    if (!roomID) {
         return (
             <div style={styles.container}>
                 <div style={styles.errorCard}>
@@ -84,19 +135,20 @@ const Controller = () => {
 
     // Accesso con ID 
     // PLACEHOLDER VA FINITO
-    return (
+    return ( 
         <div style={styles.container}>
             <div style={styles.loadingContainer}>
-                {/* Simulazione caricamento */}
                 <div style={{ fontSize: '3rem' }}>📱</div>
-                <h2 style={styles.loadingText}>Inizializzazione Controller...</h2>
-                <p style={{ color: '#888', marginTop: '10px' }}>
-                    Target Room: <strong>{roomId}</strong>
+                <h2 style={styles.loadingText}>Controller Mobile</h2>
+                <p style={{ color: '#aaa', marginTop: '10px' }}>
+                    Stato: <strong style={{color: '#61dafb'}}>{connectionStep}</strong>
                 </p>
-                <br/>
-                <small style={{ color: '#555' }}>
-                    (La connessione Socket.IO e WebRTC avverrà qui nel prossimo step)
-                </small>
+                
+                {/* Se la connessione è completa, i Data Channel si apriranno.
+                   Puoi controllare la console del browser per vedere:
+                   "Canale 'fast_input' APERTO"
+                   "Canale 'reliable_control' APERTO"
+                */}
             </div>
         </div>
     );

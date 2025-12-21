@@ -10,26 +10,56 @@ const QRCodeDisplay = ({ roomId }) => {
 
     const controllerUrl = `${protocol}//${host}:${port}/controller?room=${roomId}`;
 
+    const styles = {
+        container: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            animation: 'fadeIn 0.5s ease-in'
+        },
+        qrBox: {
+            background: 'white',
+            padding: '20px',
+            borderRadius: '15px',
+            boxShadow: '0 0 25px rgba(97, 218, 251, 0.4)', 
+            transition: 'transform 0.3s ease'
+        },
+        text: {
+            marginTop: '25px',
+            color: '#aaa', 
+            wordBreak: 'break-all',
+            textAlign: 'center',
+            fontSize: '1rem',
+            lineHeight: '1.5',
+            maxWidth: '300px'
+        },
+        link: {
+            color: '#61dafb', 
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            marginTop: '5px',
+            display: 'block',
+            fontSize: '0.9rem'
+        }
+    };
+
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ 
-            background: 'white', 
-            padding: '16px', 
-            borderRadius: '10px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)' 
-        }}>
-            <QRCodeCanvas 
-            value={controllerUrl} 
-            size={256}             
-            level={"H"}            // Livello correzione errori (High)
-            includeMargin={true}  
-            />
-        </div>
+        <div style={styles.container}>
+            <div style={styles.qrBox}>
+                <QRCodeCanvas 
+                value={controllerUrl} 
+                size={256}             
+                level={"H"}            // Livello correzione errori (High)
+                includeMargin={true}  
+                />
+            </div>
         
-        <p style={{ marginTop: '15px', color: '#555', wordBreak: 'break-all' }}>
-            Inquadra col telefono o vai su:<br/>
-            <a href={controllerUrl} target="_blank" rel="noopener noreferrer">{controllerUrl}</a>
-        </p>
+            <p style={styles.text}>
+                Inquadra col telefono o vai su:<br/>
+                <a href={controllerUrl} target="_blank" rel="noopener noreferrer" style={styles.link}> 
+                    {controllerUrl}
+                </a>
+            </p>
         </div>
     );
 };
