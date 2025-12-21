@@ -225,3 +225,49 @@
   text-decoration: underline;
   opacity: 0.8;
 }
+
+/* --- GAMEPAD ACTION BUTTONS --- */
+.action-buttons-container {
+  display: flex;
+  gap: 20px;
+  /* Ruotiamo leggermente il container per simulare l'ergonomia di un joypad reale */
+  transform: rotate(-15deg); 
+  margin-top: 20px;
+}
+
+.game-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.4), 0 10px 10px rgba(0,0,0,0.2);
+  transition: all 0.05s ease; /* Transizione velocissima per feedback immediato */
+  user-select: none; /* Evita che si selezioni il testo tenendo premuto */
+  -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu su Android/iOS */
+  touch-action: manipulation; /* Ottimizzazione touch */
+  cursor: pointer;
+}
+
+/* Stile Pulsante A (Verde) */
+.btn-a {
+  background: linear-gradient(145deg, #4caf50, #388e3c);
+  margin-top: 30px; /* Offset per posizionarlo più in basso del B */
+}
+
+/* Stile Pulsante B (Rosso) */
+.btn-b {
+  background: linear-gradient(145deg, #f44336, #d32f2f);
+}
+
+/* Stato Premuto (Active) */
+.game-btn:active, .game-btn.pressed {
+  transform: translateY(6px); /* Effetto "premuto" fisico */
+  box-shadow: 0 0 0 rgba(0,0,0,0.4), inset 0 2px 5px rgba(0,0,0,0.3);
+  opacity: 0.9;
+}
