@@ -48,9 +48,15 @@ L'unico prerequisito è NodeJS v16+. Bisogna effettuare il setup sia del server 
 
     npm install
 
-Per avviare:
+Compilare il frontend per essere servito dal server:
 
-    npn server.js
+    cd client
+    npm run build
+
+Avviare il server:
+
+    cd ..
+    node server.js
 
 e aprire `localhost:3000` o la macchina che sta eseguendo il server.
 Si viene automaticamente reindirizzati alla pagina adeguata al dispositivo che contatta il server. Nel caso in cui sia uno smartphone, un messaggio d'errore è normale in quanto bisognerebbe scannerizzare il qr per sapere a quale host connettersi e non contattare direttamente il server. 
