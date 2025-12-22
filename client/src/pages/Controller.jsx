@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from 'react-router-dom';
 import PageLayout from "../components/PageLayout";
+import ActionButtons from "../components/Gamepad/ActionButtons";
+import Dpad from "../components/Gamepad/DPad";
+import MicToggle from "../components/Gamepad/MicToggle";
 import socket from "../services/socket";
 import webrtc from "../services/webrtc";
 
@@ -8,6 +11,7 @@ const Controller = () => {
     const [searchParams] = useSearchParams();
     const roomID = searchParams.get('room');
     const [connectionStep, setConnectionStep] = useState("Inizializzazione...");
+    const [isControllerReady, setIsControllerReady] = useState(false);
 
     useEffect( () => {
         if(!roomID) {
@@ -31,8 +35,11 @@ const Controller = () => {
                         roomID, 
                         type: "candidate", 
                         payload: candidate 
-                    });
-                });
+                    });},
+                    null, 
+                    null, 
+                    () => setIsControllerReady(true)
+                );
 
                 const answer = await webrtc.createAnswer(data.payload);
                 
@@ -57,6 +64,10 @@ const Controller = () => {
         }
     }, [roomID]);
 
+    const onInputGenerated = (type, data) => {
+        webrtc.sendData(type, data);
+    };
+
     // Accesso diretto senza ID (Errore)
     if (!roomID) { 
         return (
@@ -78,7 +89,28 @@ const Controller = () => {
         ); 
     }
 
-    // PLACEHOLDER
+    // INTERFACCIA DI GIOCO (Mostrata solo quando connesso)
+    if (isControllerReady) {
+        return (
+            <div className="gamepad-container">
+                <div className="control-section left-section">
+                    <Dpad />
+                </div>
+
+                <div className="control-section center-section">
+                    <div className="connection-status connected">● REC</div>
+                    <MicToggle />
+                    <div className="room-info">ID: {roomID}</div>
+                </div>
+
+                <div className="control-section right-section">
+                    <ActionButtons onInput={onInputGenerated}/>
+                </div>
+            </div>
+        );
+    }
+    
+    // Pagina di caricamento
     return (
         <PageLayout>
             <div className="controller-icon">📱</div>

@@ -21,7 +21,7 @@ class WebRTCService {
      * @param {Function} onTrack - (Opzionale) Callback quando arriva uno stream audio remoto (Host)
      * @param {Function} onDataChannelMsg - (Opzionale) Callback quando arrivano dati
     */
-    initPeerConnection(onIceCandidate, onTrack, onDataChannelMsg) {
+    initPeerConnection(onIceCandidate, onTrack, onDataChannelMsg, onOpen) {
         if (this.peerConnection) this.close();
 
         this.peerConnection = new RTCPeerConnection(this.config);
@@ -46,7 +46,7 @@ class WebRTCService {
             const channel = event.channel;
             console.log(`Data Channel ricevuto: ${channel.label}`);
             
-            this.setupChannelListeners(channel, onDataChannelMsg);
+            this.setupChannelListeners(channel, onDataChannelMsg, onOpen);
 
             // Salviamo il riferimento per poter rispondere se necessario
             if (channel.label === "fast") this.dataChannels.fast = channel;
@@ -78,8 +78,11 @@ class WebRTCService {
     /**
      * Configura i listener open, close, message (per comodità parsa anche il json)
      */
-    setupChannelListeners(channel, onMessage) {
-        channel.onopen = () => console.log(`Canale '${channel.label}' APERTO`);
+    setupChannelListeners(channel, onMessage, onOpen) {
+        channel.onopen = () => {
+            console.log(`Canale '${channel.label}' APERTO`);
+            onOpen();
+        };            
         channel.onclose = () => console.log(`Canale '${channel.label}' CHIUSO`);
         
         if (onMessage) {
