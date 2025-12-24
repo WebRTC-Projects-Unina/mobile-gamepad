@@ -271,3 +271,111 @@
   box-shadow: 0 0 0 rgba(0,0,0,0.4), inset 0 2px 5px rgba(0,0,0,0.3);
   opacity: 0.9;
 }
+
+/* --- GAMEPAD D-PAD --- */
+.dpad-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dpad-btn {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: #444;
+  border: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 0 #222, 0 5px 10px rgba(0,0,0,0.3);
+  transition: transform 0.05s, box-shadow 0.05s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.dpad-btn:active, .dpad-btn.pressed {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #222, inset 0 2px 5px rgba(0,0,0,0.5);
+  background: #555;
+  color: white;
+}
+
+.dpad-up {
+  top: 0;
+  left: 60px;
+  border-radius: 10px 10px 0 0;
+}
+
+.dpad-down {
+  bottom: 0;
+  left: 60px;
+  border-radius: 0 0 10px 10px;
+}
+
+.dpad-left {
+  left: 0;
+  top: 60px;
+  border-radius: 10px 0 0 10px;
+}
+
+.dpad-right {
+  right: 0;
+  top: 60px;
+  border-radius: 0 10px 10px 0;
+}
+
+.dpad-center {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: #444;
+  top: 60px;
+  left: 60px;
+  z-index: -1;
+}
+
+/* --- MIC TOGGLE --- */
+.mic-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: none;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.mic-muted {
+  background: linear-gradient(145deg, #d32f2f, #b71c1c);
+  color: #ffcdd2;
+  border: 2px solid #e57373;
+}
+
+.mic-active {
+  background: linear-gradient(145deg, #4caf50, #388e3c);
+  color: #fff;
+  border: 2px solid #81c784;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.6), 0 6px 10px rgba(0,0,0,0.3);
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}

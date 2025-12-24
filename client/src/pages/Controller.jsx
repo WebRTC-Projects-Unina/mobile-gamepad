@@ -94,7 +94,7 @@ const Controller = () => {
         return (
             <div className="gamepad-container">
                 <div className="control-section left-section">
-                    <Dpad />
+                    <Dpad onInput={onInputGenerated} />
                 </div>
 
                 <div className="control-section center-section">

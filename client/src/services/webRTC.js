@@ -59,20 +59,21 @@ class WebRTCService {
     /**
      * Crea i canali dati. Deve essere chiamato dall'OFFERER (Host) prima di createOffer.
      * @param {Function} onMessage - Callback per gestire i messaggi in arrivo
+     * @param {Function} onOpen - (Opzionale) Callback quando il canale si apre
      */
-    createDataChannels(onMessage) {
+    createDataChannels(onMessage, onOpen) {
         if (!this.peerConnection) return;
 
         this.dataChannels.fast = this.peerConnection.createDataChannel("fast", {
             ordered: false,
             maxRetransmits: 0 
         });
-        this.setupChannelListeners(this.dataChannels.fast, onMessage);
+        this.setupChannelListeners(this.dataChannels.fast, onMessage, onOpen);
 
         this.dataChannels.reliable = this.peerConnection.createDataChannel("reliable", {
             ordered: true
         });
-        this.setupChannelListeners(this.dataChannels.reliable, onMessage);
+        this.setupChannelListeners(this.dataChannels.reliable, onMessage, onOpen);
     }
 
     /**
@@ -81,7 +82,7 @@ class WebRTCService {
     setupChannelListeners(channel, onMessage, onOpen) {
         channel.onopen = () => {
             console.log(`Canale '${channel.label}' APERTO`);
-            onOpen();
+            if(onOpen) onOpen();
         };            
         channel.onclose = () => console.log(`Canale '${channel.label}' CHIUSO`);
         
