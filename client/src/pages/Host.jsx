@@ -88,25 +88,39 @@ const Host = () => {
 
     const statusColor = status.includes("Connesso") ? '#4caf50' : '#ff6b6b';
 
-    return (
-        <PageLayout>
-            <h1 className="page-title">Modulo HOST (PC)</h1>
-            
-            <div className="status-card">
-                <div className="status-text">
-                    <strong>Stato Socket:</strong> 
-                    <span className="status-indicator" style={{ color: statusColor }}>
-                        {status}
-                    </span>
+    // Stanza non ancora creata
+    if (!roomID) {
+        return (
+            <PageLayout>
+                <h1 className="page-title">Modulo HOST (PC)</h1>
+                <div className="status-card">
+                    <div className="status-text">
+                        <strong>Stato Socket:</strong> 
+                        <span className="status-indicator" style={{ color: statusColor }}>
+                            {status}
+                        </span>
+                    </div>
+                    {socketID && <small className="socket-id">Socket ID: {socketID}</small>}
                 </div>
-                {socketID && <small className="socket-id">Socket ID: {socketID}</small>}
-            </div>
-
-            {!roomID && (
                 <p className="loading-text">Generazione stanza in corso...</p>
-            )}
-            
-            {roomID && !status.includes("Controller Connesso!") && (
+            </PageLayout>
+        );
+    }
+
+    // Stanza creata ma controller non connesso
+    if (!status.includes("Controller Connesso!")) {
+        return (
+            <PageLayout>
+                <h1 className="page-title">Modulo HOST (PC)</h1>
+                <div className="status-card">
+                    <div className="status-text">
+                        <strong>Stato Socket:</strong> 
+                        <span className="status-indicator" style={{ color: statusColor }}>
+                            {status}
+                        </span>
+                    </div>
+                    {socketID && <small className="socket-id">Socket ID: {socketID}</small>}
+                </div>
                 <div className="qr-container">
                     <h3 className="qr-title">Scansiona per connetterti</h3>
                     
@@ -118,7 +132,24 @@ const Host = () => {
                         {roomID}
                     </div>
                 </div>
-            )}
+            </PageLayout>
+        );
+    }
+
+    // Controller connesso
+    return (
+        <PageLayout>
+            <h1 className="page-title">Modulo HOST (PC)</h1>
+            <div className="status-card">
+                <div className="status-text">
+                    <strong>Stato Socket:</strong> 
+                    <span className="status-indicator" style={{ color: statusColor }}>
+                        {status}
+                    </span>
+                </div>
+                {socketID && <small className="socket-id">Socket ID: {socketID}</small>}
+            </div>
+            {/* TODO: Implementare interfaccia controller connesso */}
         </PageLayout>
     );
 };

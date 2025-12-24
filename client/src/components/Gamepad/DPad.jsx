@@ -1,20 +1,41 @@
-import React from "react";
+import React, { useRef } from "react";
 import '../../App.css';
 
 const DPad = ({ onInput }) => {
+    const intervalRefs = useRef({});
+
     const handlePress = (direction, pressed) => {
         // Feedback aptico (vibrazione)
         if (pressed && navigator.vibrate) {
             navigator.vibrate(30); 
         }
         
-        if (onInput) {
-            // Usa il canale 'fast' (UDP-like) come abbiamo indicato nel design in webrtc.js
-            onInput('fast', { 
-                type: 'DPAD', 
-                key: direction, 
-                pressed: pressed 
-            });
+        if (pressed) {
+            // Invia immediatamente il primo messaggio
+            if (onInput) {
+                onInput('fast', { 
+                    type: 'DPAD', 
+                    key: direction, 
+                    pressed: true 
+                });
+            }
+
+            // Avvia l'intervallo per inviare messaggi ogni 0.1 secondi (100ms)
+            intervalRefs.current[direction] = setInterval(() => {
+                if (onInput) {
+                    onInput('fast', { 
+                        type: 'DPAD', 
+                        key: direction, 
+                        pressed: true 
+                    });
+                }
+            }, 100);
+        } else {
+            // Interrompi l'invio dei messaggi quando il tasto viene rilasciato
+            if (intervalRefs.current[direction]) {
+                clearInterval(intervalRefs.current[direction]);
+                delete intervalRefs.current[direction];
+            }
         }
     };
 
