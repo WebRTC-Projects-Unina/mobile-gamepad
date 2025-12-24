@@ -379,3 +379,71 @@
   70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
   100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
 }
+
+/* --- GAMEPAD LAYOUT --- */
+.gamepad-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+  background-color: #20232a;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+.control-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.left-section {
+  align-items: flex-start;
+  padding-left: 40px;
+}
+
+.right-section {
+  align-items: flex-end;
+  padding-right: 40px;
+}
+
+.center-section {
+  flex: 0 0 auto; /* Don't grow/shrink */
+}
+
+.connection-status {
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+  color: #4caf50;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.room-info {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 10px;
+}
+
+/* Landscape orientation enforcement (optional but good for gamepads) */
+@media screen and (orientation: portrait) {
+  .gamepad-container {
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+  }
+  
+  .left-section, .right-section {
+    align-items: center;
+    padding: 0;
+  }
+  
+  .action-buttons-container {
+    transform: rotate(0deg); /* Reset rotation in portrait */
+  }
+}
