@@ -5,7 +5,7 @@ import ActionButtons from "../components/Gamepad/ActionButtons";
 import Dpad from "../components/Gamepad/DPad";
 import MicToggle from "../components/Gamepad/MicToggle";
 import socket from "../services/socket";
-import webrtc from "../services/webrtc";
+import webrtc from "../services/webRTC";
 
 const Controller = () => {
     const [searchParams] = useSearchParams();
@@ -29,40 +29,22 @@ const Controller = () => {
         socket.on("negotiation", async (data) => {
             if (data.type === "offer") {
                 setConnectionStep("Negoziazione P2P in corso...");
-                
-                webrtc.initPeerConnection((candidate) => {
+                await webrtc.initAnswerer((candidate) => {
                     socket.emit("negotiation", { 
                         roomID, 
                         type: "candidate", 
                         payload: candidate 
-                    });},
-                    null, 
-                    null, 
-                    () => setIsControllerReady(true),
-                    async () => {
-                        // onNegotiationNeeded: Scatta quando aggiungiamo il microfono
-                        console.log("Rinegoziazione avviata dal Controller...");
-                        const offer = await webrtc.createOffer();
-                        socket.emit("negotiation", {
-                            roomID,
-                            type: "offer",
-                            payload: offer
-                        });
-                    }
+                    });}, 
+                    () => setIsControllerReady(true)
                 );
 
                 const answer = await webrtc.createAnswer(data.payload);
-                
                 socket.emit("negotiation", { 
                     roomID, 
                     type: "answer", 
                     payload: answer 
                 });
             } 
-            else if (data.type === "answer") {
-                console.log("Risposta di rinegoziazione ricevuta dall'Host");
-                await webrtc.setRemoteAnswer(data.payload);
-            }
             else if (data.type === "candidate") {
                 await webrtc.addIceCandidate(data.payload);
             }
@@ -77,10 +59,6 @@ const Controller = () => {
             webrtc.close();
         }
     }, [roomID]);
-
-    const onInputGenerated = (type, data) => {
-        webrtc.sendData(type, data);
-    };
 
     // Accesso diretto senza ID (Errore)
     if (!roomID) { 
@@ -103,6 +81,8 @@ const Controller = () => {
         ); 
     }
 
+    const onInputGenerated = (type, data) => {webrtc.sendData(type, data);};
+    
     // INTERFACCIA DI GIOCO (Mostrata solo quando connesso)
     if (isControllerReady) {
         return (
@@ -112,8 +92,7 @@ const Controller = () => {
                 </div>
 
                 <div className="control-section center-section">
-                    <div className="connection-status connected">● REC</div>
-                    <MicToggle />
+                    <MicToggle webrtcInstance={webrtc} />
                     <div className="room-info">ID: {roomID}</div>
                 </div>
 

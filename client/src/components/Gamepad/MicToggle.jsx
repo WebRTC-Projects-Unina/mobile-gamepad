@@ -1,37 +1,27 @@
 import React, { useState } from "react";
-import webrtc from "../../services/webrtc";
 import '../../App.css';
 
-const MicToggle = () => {
-    const [isMuted, setIsMuted] = useState(true);
+const MicToggle = ({webrtcInstance}) => {
+    const [isEnabled, setIsEnabled] = useState(false);
 
-    const handleToggle = async () => {
-        // Se lo stream non è ancora attivo, proviamo ad avviarlo
-        if (!webrtc.localStream) {
-            const success = await webrtc.startAudioStream();
-            if (success) {
-                // Se l'acquisizione ha successo, attiviamo l'audio
-                setIsMuted(false);
-                webrtc.toggleAudio(true);
-            } else {
-                alert("Impossibile accedere al microfono. Verifica i permessi.");
-            }
+    const handleToggle = () => {
+        // Aggiorna solo se lo stream locale è attivo
+        if (webrtcInstance.isAudioStreamActive()) {
+            const newEnabledState = !isEnabled;
+            console.log("Abilitazione audio:", newEnabledState);
+            setIsEnabled(newEnabledState);
+            webrtcInstance.enableAudio(newEnabledState);
         } else {
-            // Se lo stream esiste già, eseguiamo il toggle
-            const newMutedState = !isMuted;
-            setIsMuted(newMutedState);
-            // toggleAudio accetta 'isEnabled', quindi passiamo !newMutedState
-            webrtc.toggleAudio(!newMutedState);
+            console.log("Stream Audio non inizializzato");
         }
     };
 
     return (
         <button 
-            className={`mic-btn ${isMuted ? 'mic-muted' : 'mic-active'}`}
+            className={`mic-btn ${isEnabled ? 'mic-active' : 'mic-muted'}`}
             onClick={handleToggle}
-            aria-label={isMuted ? "Attiva microfono" : "Disattiva microfono"}
         >
-            {isMuted ? '🔇' : '🎙️'}
+            {isEnabled ? '🎙️' : '🔇'}
         </button>
     );
 };

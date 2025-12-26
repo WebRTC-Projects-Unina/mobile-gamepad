@@ -1,5 +1,5 @@
 import socket from "../services/socket";
-import webrtc from "../services/webrtc";
+import webrtc from "../services/webRTC";
 import QRCodeDisplay from "../components/QRCodeDisplay";
 import PageLayout from "../components/PageLayout";
 import React, { useEffect, useState, useRef } from "react";
@@ -32,25 +32,30 @@ const Host = () => {
 
         socket.on("controllerConnected", async () => {
             setStatus("Controller Connesso! Pronto a giocare.");
-            // CALLBACK PER AUDIO E GESTIONE DEI MESSAGGI ANCORA NON IMPLEMENTATE
-            webrtc.initPeerConnection((candidate) => {
+
+            webrtc.initOfferer((candidate) => {
                 socket.emit("negotiation", { 
                     roomID: roomIDRef.current, 
                     type: "candidate", 
                     payload: candidate 
                 });
             }, (stream) => {
-                console.log("Stream audio ricevuto");
+                
+                const audioTracks = stream.getAudioTracks();
                 if (audioRef.current) {
                     audioRef.current.srcObject = stream;
-                    audioRef.current.play().catch(e => console.error("Errore autoplay:", e));
+                    audioRef.current.muted = false;
+                    audioRef.current.volume = 1.0;
+                    audioRef.current.autoplay = true;
+                    const playPromise = audioRef.current.play();
+                    if (playPromise && playPromise.catch) {
+                        playPromise.catch(e => console.error("Errore autoplay:", e));
+                    }
                 }
-            });
+            }, (label, data) => console.log(`Dati ricevuti su ${label}:`, data)
+            );
 
-            webrtc.createDataChannels((label, data) => {
-                console.log(`Dati ricevuti su ${label}:`, data);
-            });
-
+            // Inizia la negoziazione
             const offer = await webrtc.createOffer();
             socket.emit("negotiation", { 
                 roomID: roomIDRef.current, 
@@ -64,15 +69,6 @@ const Host = () => {
                 console.log("Risposta ricevuta, connessione P2P in finalizzazione...");
                 await webrtc.setRemoteAnswer(data.payload);
             } 
-            else if (data.type === "offer") {
-                console.log("Offerta di rinegoziazione ricevuta...");
-                const answer = await webrtc.createAnswer(data.payload);
-                socket.emit("negotiation", {
-                    roomID: roomIDRef.current,
-                    type: "answer",
-                    payload: answer
-                });
-            }
             else if (data.type === "candidate") {
                 await webrtc.addIceCandidate(data.payload);
             }
@@ -84,7 +80,6 @@ const Host = () => {
 
         });
 
-        // Gestione errori
         socket.on("connect_error", (err) => {
             setStatus(`Errore connessione: ${err.message}`);
         });
@@ -108,6 +103,7 @@ const Host = () => {
     if (!roomID) {
         return (
             <PageLayout>
+                <audio ref={audioRef} autoPlay style={{ display: 'none' }} /> {/* audio tag replicata per popolare audioRef prima dell'evento */}
                 <h1 className="page-title">Modulo HOST (PC)</h1>
                 <div className="status-card">
                     <div className="status-text">
@@ -127,6 +123,7 @@ const Host = () => {
     if (!status.includes("Controller Connesso!")) {
         return (
             <PageLayout>
+                <audio ref={audioRef} autoPlay style={{ display: 'none' }} />
                 <h1 className="page-title">Modulo HOST (PC)</h1>
                 <div className="status-card">
                     <div className="status-text">
