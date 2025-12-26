@@ -38,7 +38,17 @@ const Controller = () => {
                     });},
                     null, 
                     null, 
-                    () => setIsControllerReady(true)
+                    () => setIsControllerReady(true),
+                    async () => {
+                        // onNegotiationNeeded: Scatta quando aggiungiamo il microfono
+                        console.log("Rinegoziazione avviata dal Controller...");
+                        const offer = await webrtc.createOffer();
+                        socket.emit("negotiation", {
+                            roomID,
+                            type: "offer",
+                            payload: offer
+                        });
+                    }
                 );
 
                 const answer = await webrtc.createAnswer(data.payload);
@@ -49,6 +59,10 @@ const Controller = () => {
                     payload: answer 
                 });
             } 
+            else if (data.type === "answer") {
+                console.log("Risposta di rinegoziazione ricevuta dall'Host");
+                await webrtc.setRemoteAnswer(data.payload);
+            }
             else if (data.type === "candidate") {
                 await webrtc.addIceCandidate(data.payload);
             }

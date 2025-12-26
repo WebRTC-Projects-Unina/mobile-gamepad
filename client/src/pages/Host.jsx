@@ -11,6 +11,7 @@ const Host = () => {
 
     // Per mantenere il valore di roomID nelle callback async
     const roomIDRef = useRef(null);
+    const audioRef = useRef(null);
 
     useEffect( () => {
         // Connessione e creazione della stanza
@@ -38,6 +39,12 @@ const Host = () => {
                     type: "candidate", 
                     payload: candidate 
                 });
+            }, (stream) => {
+                console.log("Stream audio ricevuto");
+                if (audioRef.current) {
+                    audioRef.current.srcObject = stream;
+                    audioRef.current.play().catch(e => console.error("Errore autoplay:", e));
+                }
             });
 
             webrtc.createDataChannels((label, data) => {
@@ -57,6 +64,15 @@ const Host = () => {
                 console.log("Risposta ricevuta, connessione P2P in finalizzazione...");
                 await webrtc.setRemoteAnswer(data.payload);
             } 
+            else if (data.type === "offer") {
+                console.log("Offerta di rinegoziazione ricevuta...");
+                const answer = await webrtc.createAnswer(data.payload);
+                socket.emit("negotiation", {
+                    roomID: roomIDRef.current,
+                    type: "answer",
+                    payload: answer
+                });
+            }
             else if (data.type === "candidate") {
                 await webrtc.addIceCandidate(data.payload);
             }
@@ -139,6 +155,7 @@ const Host = () => {
     // Controller connesso
     return (
         <PageLayout>
+            <audio ref={audioRef} autoPlay style={{ display: 'none' }} />
             <h1 className="page-title">Modulo HOST (PC)</h1>
             <div className="status-card">
                 <div className="status-text">

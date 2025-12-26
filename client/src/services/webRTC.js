@@ -20,8 +20,10 @@ class WebRTCService {
      * @param {Function} onIceCandidate - Callback per inviare i candidati al signaling server
      * @param {Function} onTrack - (Opzionale) Callback quando arriva uno stream audio remoto (Host)
      * @param {Function} onDataChannelMsg - (Opzionale) Callback quando arrivano dati
+     * @param {Function} onOpen - (Opzionale) Callback quando il data channel si apre
+     * @param {Function} onNegotiationNeeded - (Opzionale) Callback quando è necessaria una rinegoziazione (es. aggiunta track)
     */
-    initPeerConnection(onIceCandidate, onTrack, onDataChannelMsg, onOpen) {
+    initPeerConnection(onIceCandidate, onTrack, onDataChannelMsg, onOpen, onNegotiationNeeded) {
         if (this.peerConnection) this.close();
 
         this.peerConnection = new RTCPeerConnection(this.config);
@@ -37,6 +39,13 @@ class WebRTCService {
             this.peerConnection.ontrack = (event) => {
                 console.log("Stream audio ricevuto!");
                 onTrack(event.streams[0]);
+            };
+        }
+
+        if (onNegotiationNeeded) {
+            this.peerConnection.onnegotiationneeded = () => {
+                console.log("Negoziazione necessaria rilevata.");
+                onNegotiationNeeded();
             };
         }
 
@@ -118,7 +127,7 @@ class WebRTCService {
             this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             
             this.localStream.getTracks().forEach((track) => {
-                // Aggiunge la traccia alla peer connection esistente
+                // Aggiunge la traccia alla peer connection esistente quindi solleva un evento di rinegoziazione 
                 this.peerConnection.addTrack(track, this.localStream);
             });
             console.log("Microfono acquisito e aggiunto allo stream.");
