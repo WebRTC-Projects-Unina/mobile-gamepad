@@ -34,15 +34,17 @@ const Host = () => {
 
         socket.on("controllerConnected", async () => {
             setStatus("Controller Connesso! Pronto a giocare.");
+            console.log("📞 Inizio negoziazione WebRTC...");
 
             webrtc.initOfferer((candidate) => {
+                console.log("📤 Invio ICE Candidate del Host...");
                 socket.emit("negotiation", { 
                     roomID: roomIDRef.current, 
                     type: "candidate", 
                     payload: candidate 
                 });
             }, (stream) => {
-                
+                console.log("✅ Stream audio ricevuto dal Controller!");
                 const audioTracks = stream.getAudioTracks();
                 if (audioRef.current) {
                     audioRef.current.srcObject = stream;
@@ -61,6 +63,7 @@ const Host = () => {
             );
 
             // Inizia la negoziazione
+            console.log("📨 Creo e invio OFFER...");
             const offer = await webrtc.createOffer();
             socket.emit("negotiation", { 
                 roomID: roomIDRef.current, 
@@ -71,10 +74,11 @@ const Host = () => {
 
         socket.on("negotiation", async (data) => {
             if (data.type === "answer") {
-                console.log("Risposta ricevuta, connessione P2P in finalizzazione...");
+                console.log("📩 ANSWER ricevuta dal Controller, connessione P2P in finalizzazione...");
                 await webrtc.setRemoteAnswer(data.payload);
             } 
             else if (data.type === "candidate") {
+                console.log("📡 ICE Candidate ricevuto dal Controller");
                 await webrtc.addIceCandidate(data.payload);
             }
         });
