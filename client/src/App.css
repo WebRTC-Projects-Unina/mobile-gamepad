@@ -447,3 +447,24 @@
     transform: rotate(0deg); /* Reset rotation in portrait */
   }
 }
+
+/* GAME COMPONENT */
+.game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000;
+}
+
+.game-info {
+  pointer-events: none;
+  border-radius: 8px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.game-info h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #61dafb;
+}

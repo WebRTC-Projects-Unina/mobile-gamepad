@@ -2,6 +2,7 @@ import socket from "../services/socket";
 import webrtc from "../services/webRTC";
 import QRCodeDisplay from "../components/QRCodeDisplay";
 import PageLayout from "../components/PageLayout";
+import Game from "../components/Game";
 import React, { useEffect, useState, useRef } from "react";
 
 const Host = () => {
@@ -12,6 +13,7 @@ const Host = () => {
     // Per mantenere il valore di roomID nelle callback async
     const roomIDRef = useRef(null);
     const audioRef = useRef(null);
+    const messageHandlerRef = useRef(null);
 
     useEffect( () => {
         // Connessione e creazione della stanza
@@ -52,7 +54,10 @@ const Host = () => {
                         playPromise.catch(e => console.error("Errore autoplay:", e));
                     }
                 }
-            }, (label, data) => console.log(`Dati ricevuti su ${label}:`, data)
+            }, (label, data) => { // iinvio dati al component game
+                console.log(`Dati ricevuti su ${label}:`, data);
+                if (messageHandlerRef.current) messageHandlerRef.current(data);
+            }
             );
 
             // Inizia la negoziazione
@@ -150,20 +155,12 @@ const Host = () => {
 
     // Controller connesso
     return (
-        <PageLayout>
+        <>
             <audio ref={audioRef} autoPlay style={{ display: 'none' }} />
-            <h1 className="page-title">Modulo HOST (PC)</h1>
-            <div className="status-card">
-                <div className="status-text">
-                    <strong>Stato Socket:</strong> 
-                    <span className="status-indicator" style={{ color: statusColor }}>
-                        {status}
-                    </span>
-                </div>
-                {socketID && <small className="socket-id">Socket ID: {socketID}</small>}
-            </div>
-            {/* TODO: Implementare interfaccia controller connesso */}
-        </PageLayout>
+            <Game
+                onInputReceived={(handler) => {messageHandlerRef.current = handler;}} //diventa handleInput del componente figlio (game)
+            />
+        </>
     );
 };
 
