@@ -8,10 +8,11 @@ const MicToggle = ({webrtcInstance}) => {
         // Aggiorna solo se lo stream locale è attivo
         if (webrtcInstance.isAudioStreamActive()) {
             const newEnabledState = !isEnabled;
+            console.log("Abilitazione audio:", newEnabledState);
             setIsEnabled(newEnabledState);
             webrtcInstance.enableAudio(newEnabledState);
         } else {
-            console.warn("Stream Audio non inizializzato");
+            console.log("Stream Audio non inizializzato");
         }
     };
 

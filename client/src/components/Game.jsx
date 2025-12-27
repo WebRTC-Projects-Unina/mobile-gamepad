@@ -16,6 +16,7 @@ const Game = ({onInputReceived}) => {
     const inputTimeoutsRef = useRef({});
 
     const processGameInput = (data) => {
+        console.log("Game Input:", data);
         const iframeWindow = iframeRef.current?.contentWindow;
         if(!iframeWindow) return;
 
@@ -29,6 +30,7 @@ const Game = ({onInputReceived}) => {
                 }
                 inputTimeoutsRef.current[controlKey] = setTimeout(() => { //fai partire un nuovo timer
                     controls[controlKey] = false;
+                    console.log(`Timeout scattato per ${controlKey}, valore attuale: ${controls[controlKey]}`)
                     syncGame(iframeWindow, controls);
                 }, 150);
             }
@@ -79,7 +81,7 @@ const Game = ({onInputReceived}) => {
                 gameControls.key.rtrigger = controls.rtrigger;
             }
         } catch (e) {
-            console.error("problemi durante il sync con il gioco")
+            console.log("problemi durante il sync con il gioco")
         }
     };
 
@@ -98,6 +100,7 @@ const Game = ({onInputReceived}) => {
     useEffect(() => {
         const handleMessage = (event) => {
             if (event.data === "gameLoaded"){
+                console.log("Gioco pronto");
                 setIsGameReady(true);
                 setGameStatus("Gioco pronto");
             }
