@@ -121,7 +121,7 @@ L'applicazione è organizzata in pagine che seguono un flusso di smistamento aut
 
 Il seguente diagramma mostra come gli utenti vengono smistati automaticamente alle pagine corrette e come cambia lo stato dell'interfaccia durante il ciclo di vita della connessione:
 
-![Pages State Diagram](images/Pages%20State%20Diagram.png)
+![Pages State Diagram](images/Pages%20state%20diagram.png)
 
 **Punti chiave:**
 - La **AutoLandingPage** rileva automaticamente il dispositivo
