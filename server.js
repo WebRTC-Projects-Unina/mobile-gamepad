@@ -17,6 +17,11 @@ const io = new Server(httpServer, {
     }
 });
 
+// Mappatura per sapere chi era in quale stanza e con quale ruolo
+// Servono per gestire le disconnessioni di uno dei due peer e avvisare l'altro
+const socketRoom = new Map();
+const socketRole = new Map();
+
 app.use(express.static(path.join(__dirname, "client/build")));
 
 io.on("connection", (socket) => {
@@ -27,6 +32,8 @@ io.on("connection", (socket) => {
         const roomID = Math.random().toString(36).substring(2, 6).toUpperCase();
         socket.join(roomID);
         socket.emit("roomCreated", roomID); // Manda l'Id al PC così che lo può mostrare/incapsulare in un qr
+        socketRoom.set(socket.id, roomID);
+        socketRole.set(socket.id, "host");
         console.log("Stanza creata: " + roomID);
     });
 
@@ -36,6 +43,8 @@ io.on("connection", (socket) => {
 
         if (room && room.size > 0) {
             socket.join(roomID);
+            socketRoom.set(socket.id, roomID);
+            socketRole.set(socket.id, "controller");
             socket.to(roomID).emit("controllerConnected");  // Avvisa l'host che il controller è connesso
         }
     });
@@ -54,7 +63,25 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         console.log("Client disconnesso");
-        // Logica per avvisare che l'host se il controller cade?????
+        const roomID = socketRoom.get(socket.id);
+        const role = socketRole.get(socket.id);
+
+        if (roomID && role) {
+            if (role === "host") {
+                socket.to(roomID).emit("hostDisconnected", { roomID });
+                // Elimina sia controller che host (pulisci la stanza, l'host ne dovrà creare una nuova)
+                for (const [sid, rid] of socketRoom.entries()) {
+                    if (rid === roomID) {
+                        socketRoom.delete(sid);
+                        socketRole.delete(sid);
+                    }
+                }
+            } else {
+                socket.to(roomID).emit("controllerDisconnected", { roomID });
+                socketRoom.delete(socket.id); // manteniamo l'host per riuso della stessa stanza
+                socketRole.delete(socket.id);
+            }
+        }
     });
 });
 

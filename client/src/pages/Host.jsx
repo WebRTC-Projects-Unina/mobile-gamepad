@@ -77,7 +77,6 @@ const Host = () => {
         socket.on("controllerDisconnected", () => {
             setStatus("Controller perso!");
             webrtc.close();
-
         });
 
         socket.on("connect_error", (err) => {

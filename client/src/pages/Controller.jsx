@@ -12,6 +12,7 @@ const Controller = () => {
     const roomID = searchParams.get('room');
     const [connectionStep, setConnectionStep] = useState("Inizializzazione...");
     const [isControllerReady, setIsControllerReady] = useState(false);
+    const [hostLost, setHostLost] = useState(false);
 
     useEffect( () => {
         if(!roomID) {
@@ -50,11 +51,19 @@ const Controller = () => {
             }
         });
 
+        socket.on("hostDisconnected", () => {
+            setHostLost(true);
+            setConnectionStep("Host disconnesso");
+            webrtc.close();
+            socket.disconnect();
+        });
+
         return () => {
             socket.emit("controllerDisconnected", roomID);
             socket.off("connect");
             socket.off("controllerConnected");
             socket.off("negotiation");
+            socket.off("hostDisconnected");
             socket.disconnect();
             webrtc.close();
         }
@@ -79,6 +88,21 @@ const Controller = () => {
                 </div>
             </PageLayout>
         ); 
+    }
+
+    if (hostLost) {
+        return (
+            <PageLayout>
+                <div className="error-card">
+                    <span className="error-icon">⚠️</span>
+                    <h2 className="error-title">Host disconnesso</h2>
+                    <p className="error-text">
+                        La sessione è terminata. Per continuare, torna alla pagina Host sul PC
+                        e scannerizza un nuovo QR code.
+                    </p>
+                </div>
+            </PageLayout>
+        );
     }
 
     const onInputGenerated = (type, data) => {webrtc.sendData(type, data);};
