@@ -31,10 +31,10 @@ const Game = ({onInputReceived}) => {
                     controls.backward = data.pressed;
                     break;
                 case 'LEFT':
-                    controls.left = data.pressed;
+                    controls.ltrigger = data.pressed;
                     break;
                 case 'RIGHT':
-                    controls.right = data.pressed;
+                    controls.rtrigger = data.pressed;
                     break;
                 default:
                     break;
@@ -42,10 +42,10 @@ const Game = ({onInputReceived}) => {
         } else if (data.type === 'BUTTON'){
             switch (data.key) {
                 case 'B':
-                    controls.ltrigger = data.pressed;
+                    controls.left = data.pressed;
                     break;
                 case 'A':
-                    controls.rtrigger = data.pressed;
+                    controls.right = data.pressed;
                     break;
                 default:
                     break;
