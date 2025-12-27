@@ -104,13 +104,32 @@ class WebRTCService {
 
         this.peerConnection = new RTCPeerConnection(this.config);
 
+        let iceCheckingTimeout = null;
+        let hasConnected = false;
+
         // Monitor dello stato della connessione
         this.peerConnection.onconnectionstatechange = () => {
             console.log("⚡ Stato connessione P2P (Answerer):", this.peerConnection.connectionState);
+            if (this.peerConnection.connectionState === "connected") {
+                hasConnected = true;
+            }
         };
 
         this.peerConnection.oniceconnectionstatechange = () => {
-            console.log("🧊 Stato ICE (Answerer):", this.peerConnection.iceConnectionState);
+            const state = this.peerConnection.iceConnectionState;
+            console.log("🧊 Stato ICE (Answerer):", state);
+            
+            // Se entra in "checking", avvia un timeout
+            if (state === "checking") {
+                if (iceCheckingTimeout) clearTimeout(iceCheckingTimeout);
+                iceCheckingTimeout = setTimeout(() => {
+                    if (!hasConnected && this.peerConnection.iceConnectionState === "checking") {
+                        console.warn("⚠️ ICE checking da >15 sec senza progredire. Possibile problema di candidati.");
+                    }
+                }, 15000);
+            } else if (state === "connected" || state === "completed") {
+                if (iceCheckingTimeout) clearTimeout(iceCheckingTimeout);
+            }
         };
 
         this.peerConnection.onicecandidate = (event) => {
@@ -213,11 +232,16 @@ class WebRTCService {
      * @returns la risposta da inviare
      */
     async createAnswer(offerSDP) {
+        console.log("📨 Ricevo OFFER, setto remoteDescription...");
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offerSDP));
         this.remoteDescriptionSet = true; // Marca che remoteDescription è pronta
+        console.log(`✅ Remote description impostata, flusciamo ${this.pendingIceCandidates.length} ICE candidates in buffer...`);
         await this.flushPendingIce();
+        console.log("📤 Creo ANSWER...");
         const answer = await this.peerConnection.createAnswer();
+        console.log("✅ ANSWER creato, setto come local description...");
         await this.peerConnection.setLocalDescription(answer);
+        console.log("📤 ANSWER pronto per l'invio");
         return answer;
     }
 
@@ -241,28 +265,34 @@ class WebRTCService {
         if (!this.peerConnection) return;
         try {
             if (this.remoteDescriptionSet) {
+                console.log("➕ Aggiundo ICE Candidate subito (remoteDescription già pronta)");
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             } else {
                 // RemoteDescription non ancora impostata: bufferizziamo
+                console.log(`⏳ ICE Candidate bufferizzato (in attesa di remoteDescription). Buffer size: ${this.pendingIceCandidates.length + 1}`);
                 this.pendingIceCandidates.push(candidate);
             }
         } catch (e) {
-            console.error("Errore aggiunta ICE Candidate:", e);
+            console.error("❌ Errore aggiunta ICE Candidate:", e);
         }
     }
 
     async flushPendingIce() {
         if (!this.peerConnection || !this.remoteDescriptionSet) return;
-        if (!this.pendingIceCandidates.length) return;
+        if (!this.pendingIceCandidates.length) {
+            console.log("✅ Nessun ICE Candidate da flusciare");
+            return;
+        }
+        console.log(`🔄 Flush ${this.pendingIceCandidates.length} ICE Candidates dal buffer...`);
         const toAdd = this.pendingIceCandidates.splice(0); // Copia e svuota
         for (const c of toAdd) {
             try {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(c));
-                console.log("ICE Candidate aggiunto dal buffer");
             } catch (e) {
-                console.error("Errore durante flush ICE candidate:", e);
+                console.error("❌ Errore durante flush ICE candidate:", e);
             }
         }
+        console.log(`✅ ${toAdd.length} ICE Candidates flusciati`);
     }
 
     /**
