@@ -8,6 +8,7 @@ class WebRTCService {
         this.localStream = null; // Stream audio locale
 
         this.pendingIceCandidates = []; // Buffer candidati ICE in attesa di remoteDescription
+        this.remoteDescriptionSet = false; // Traccia quando remoteDescription è pronta
 
         this.config = {
             iceServers: [
@@ -195,6 +196,7 @@ class WebRTCService {
      */
     async createAnswer(offerSDP) {
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offerSDP));
+        this.remoteDescriptionSet = true; // Marca che remoteDescription è pronta
         await this.flushPendingIce();
         const answer = await this.peerConnection.createAnswer();
         await this.peerConnection.setLocalDescription(answer);
@@ -208,6 +210,7 @@ class WebRTCService {
      */
     async setRemoteAnswer(answerSDP) {
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answerSDP));
+        this.remoteDescriptionSet = true; // Marca che remoteDescription è pronta
         await this.flushPendingIce();
     }
 
@@ -219,7 +222,7 @@ class WebRTCService {
     async addIceCandidate(candidate) {
         if (!this.peerConnection) return;
         try {
-            if (this.peerConnection.remoteDescription) {
+            if (this.remoteDescriptionSet) {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             } else {
                 // RemoteDescription non ancora impostata: bufferizziamo
@@ -231,13 +234,13 @@ class WebRTCService {
     }
 
     async flushPendingIce() {
-        if (!this.peerConnection || !this.peerConnection.remoteDescription) return;
+        if (!this.peerConnection || !this.remoteDescriptionSet) return;
         if (!this.pendingIceCandidates.length) return;
-        const toAdd = this.pendingIceCandidates;
-        this.pendingIceCandidates = [];
+        const toAdd = this.pendingIceCandidates.splice(0); // Copia e svuota
         for (const c of toAdd) {
             try {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(c));
+                console.log("ICE Candidate aggiunto dal buffer");
             } catch (e) {
                 console.error("Errore durante flush ICE candidate:", e);
             }
@@ -262,6 +265,9 @@ class WebRTCService {
             this.peerConnection.close();
             this.peerConnection = null;
         }
+        
+        this.remoteDescriptionSet = false; // Reset per riuso
+        this.pendingIceCandidates = []; // Pulisci buffer
     }
 }
 
