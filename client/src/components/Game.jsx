@@ -1,8 +1,5 @@
 import React, { useEffect, useState, useRef} from "react";
-/**
- * Componente che gestisce il rendering di hexgl con input del controller
- * @param {Function} onInputReceived - Callback per registrare input del controller
- */
+
 const Game = ({onInputReceived}) => {
     const iframeRef = useRef(null);
     const [gameStatus, setGameStatus] = useState('caricamento');
