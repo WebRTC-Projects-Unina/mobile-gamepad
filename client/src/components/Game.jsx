@@ -13,25 +13,42 @@ const Game = ({onInputReceived}) => {
         rtrigger: false // D oppure E
     })
 
+    const inputTimeoutsRef = useRef({});
+
     const processGameInput = (data) => {
         console.log("Game Input:", data);
         const iframeWindow = iframeRef.current?.contentWindow;
         if(!iframeWindow) return;
 
         const controls = controlsRef.current;
+        
+        const controlsTimer = (controlKey, pressed) => {
+            controls[controlKey] = pressed;
+            if (pressed) {
+                if (inputTimeoutsRef.current[controlKey]) { //azzera timer
+                    clearTimeout(inputTimeoutsRef.current[controlKey]);
+                }
+                inputTimeoutsRef.current[controlKey] = setTimeout(() => { //fai partire un nuovo timer
+                    controls[controlKey] = false;
+                    console.log(`Timeout scattato per ${controlKey}, valore attuale: ${controls[controlKey]}`)
+                    syncGame(iframeWindow, controls);
+                }, 150);
+            }
+        };
+
         if (data.type === 'DPAD') {
             switch (data.key) {
                 case 'UP':
-                    controls.forward = data.pressed;
+                    controlsTimer('forward', data.pressed);
                     break;
                 case 'DOWN':
-                    controls.backward = data.pressed;
+                    controlsTimer('backward', data.pressed);
                     break;
                 case 'LEFT':
-                    controls.ltrigger = data.pressed;
+                    controlsTimer('ltrigger', data.pressed);
                     break;
                 case 'RIGHT':
-                    controls.rtrigger = data.pressed;
+                    controlsTimer('rtrigger', data.pressed);
                     break;
                 default:
                     break;
