@@ -12,8 +12,8 @@ class WebRTCService {
 
         this.config = {
             iceServers: [
-                // { urls: "stun:stun.l.google.com:19302" },
-                // { urls: "stun:stun1.l.google.com:19302" },     
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },     
                 {
                     urls: "stun:stun.relay.metered.ca:80",
                 },
@@ -54,30 +54,16 @@ class WebRTCService {
 
         this.peerConnection = new RTCPeerConnection(this.config);
 
-        // Monitor dello stato della connessione
-        this.peerConnection.onconnectionstatechange = () => {
-            console.log("⚡ Stato connessione P2P (Offerer):", this.peerConnection.connectionState);
-        };
-
-        this.peerConnection.oniceconnectionstatechange = () => {
-            console.log("🧊 Stato ICE (Offerer):", this.peerConnection.iceConnectionState);
-        };
-
         // Assicura che l'offerta includa un m-line audio per ricevere il microfono remoto
         this.peerConnection.addTransceiver("audio", { direction: "recvonly" });
 
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                const candidateType = event.candidate.type; // "host", "srflx", "relay", "prflx"
-                console.log(`🔹 ICE Candidate Offerer (${candidateType}):`, event.candidate.candidate.substring(0, 80));
                 onIceCandidate(event.candidate);
-            } else {
-                console.log("✅ ICE gathering Offerer completato");
             }
         };
 
         this.peerConnection.ontrack = (event) => {
-            console.log("✅ Stream audio ricevuto!");
             onTrack(event.streams[0]);
         };
 
@@ -121,53 +107,20 @@ class WebRTCService {
 
         this.peerConnection = new RTCPeerConnection(this.config);
 
-        let iceCheckingTimeout = null;
-        let hasConnected = false;
-
-        // Monitor dello stato della connessione
-        this.peerConnection.onconnectionstatechange = () => {
-            console.log("⚡ Stato connessione P2P (Answerer):", this.peerConnection.connectionState);
-            if (this.peerConnection.connectionState === "connected") {
-                hasConnected = true;
-            }
-        };
-
-        this.peerConnection.oniceconnectionstatechange = () => {
-            const state = this.peerConnection.iceConnectionState;
-            console.log("🧊 Stato ICE (Answerer):", state);
-            
-            // Se entra in "checking", avvia un timeout
-            if (state === "checking") {
-                if (iceCheckingTimeout) clearTimeout(iceCheckingTimeout);
-                iceCheckingTimeout = setTimeout(() => {
-                    if (!hasConnected && this.peerConnection.iceConnectionState === "checking") {
-                        console.warn("⚠️ ICE checking da >15 sec senza progredire. Possibile problema di candidati.");
-                    }
-                }, 15000);
-            } else if (state === "connected" || state === "completed") {
-                if (iceCheckingTimeout) clearTimeout(iceCheckingTimeout);
-            }
-        };
-
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                const candidateType = event.candidate.type; // "host", "srflx", "relay", "prflx"
-                console.log(`🔹 ICE Candidate Answerer (${candidateType}):`, event.candidate.candidate.substring(0, 80));
                 onIceCandidate(event.candidate);
-            } else {
-                console.log("✅ ICE gathering Answerer completato");
             }
         };
 
         this.peerConnection.ondatachannel = (event) => {
             const channel = event.channel;
-            console.log(`📡 Data Channel ricevuto: ${channel.label}`);
             
             channel.onopen = () => {
-                console.log(`✅ Canale '${channel.label}' APERTO`);
+                console.log(`Canale '${channel.label}' APERTO`);
                 onOpen();
             };            
-            channel.onclose = () => console.log(`❌ Canale '${channel.label}' CHIUSO`);
+            channel.onclose = () => console.log(`Canale '${channel.label}' CHIUSO`);
 
             // Salviamo il riferimento per poter rispondere se necessario
             if (channel.label === "fast") this.dataChannels.fast = channel;
@@ -184,13 +137,11 @@ class WebRTCService {
      */
     async startAudioStream() {
         try {
-            console.log("Richiesta accesso microfono...");
             this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             this.localStream.getTracks().forEach((track) => {
                 this.peerConnection.addTrack(track, this.localStream);
             });
             this.enableAudio(false);
-            console.log("Microfono acquisito e aggiunto allo stream.");
             return true;
         } catch (err) {
             console.error("Errore accesso microfono:", err.name, err.message);
@@ -253,16 +204,11 @@ class WebRTCService {
      * @returns la risposta da inviare
      */
     async createAnswer(offerSDP) {
-        console.log("📨 Ricevo OFFER, setto remoteDescription...");
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offerSDP));
         this.remoteDescriptionSet = true; // Marca che remoteDescription è pronta
-        console.log(`✅ Remote description impostata, flusciamo ${this.pendingIceCandidates.length} ICE candidates in buffer...`);
         await this.flushPendingIce();
-        console.log("📤 Creo ANSWER...");
         const answer = await this.peerConnection.createAnswer();
-        console.log("✅ ANSWER creato, setto come local description...");
         await this.peerConnection.setLocalDescription(answer);
-        console.log("📤 ANSWER pronto per l'invio");
         return answer;
     }
 
@@ -286,34 +232,26 @@ class WebRTCService {
         if (!this.peerConnection) return;
         try {
             if (this.remoteDescriptionSet) {
-                console.log("➕ Aggiundo ICE Candidate subito (remoteDescription già pronta)");
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             } else {
-                // RemoteDescription non ancora impostata: bufferizziamo
-                console.log(`⏳ ICE Candidate bufferizzato (in attesa di remoteDescription). Buffer size: ${this.pendingIceCandidates.length + 1}`);
                 this.pendingIceCandidates.push(candidate);
             }
         } catch (e) {
-            console.error("❌ Errore aggiunta ICE Candidate:", e);
+            console.error("Errore aggiunta ICE Candidate:", e);
         }
     }
 
     async flushPendingIce() {
         if (!this.peerConnection || !this.remoteDescriptionSet) return;
-        if (!this.pendingIceCandidates.length) {
-            console.log("✅ Nessun ICE Candidate da flusciare");
-            return;
-        }
-        console.log(`🔄 Flush ${this.pendingIceCandidates.length} ICE Candidates dal buffer...`);
+        if (!this.pendingIceCandidates.length) return;
         const toAdd = this.pendingIceCandidates.splice(0); // Copia e svuota
         for (const c of toAdd) {
             try {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(c));
             } catch (e) {
-                console.error("❌ Errore durante flush ICE candidate:", e);
+                console.error("Errore durante flush ICE candidate:", e);
             }
         }
-        console.log(`✅ ${toAdd.length} ICE Candidates flusciati`);
     }
 
     /**
@@ -335,8 +273,8 @@ class WebRTCService {
             this.peerConnection = null;
         }
         
-        this.remoteDescriptionSet = false; // Reset per riuso
-        this.pendingIceCandidates = []; // Pulisci buffer
+        this.remoteDescriptionSet = false;
+        this.pendingIceCandidates = [];
     }
 }
 
