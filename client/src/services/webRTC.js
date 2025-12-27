@@ -10,8 +10,6 @@ class WebRTCService {
         this.pendingIceCandidates = []; // Buffer candidati ICE in attesa di remoteDescription
         this.remoteDescriptionSet = false; // Traccia quando remoteDescription è pronta
 
-        iceServers
-
         this.config = {
             iceServers: [
                 { urls: "stun:stun.l.google.com:19302" },
