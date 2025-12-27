@@ -11,21 +11,11 @@ class WebRTCService {
         this.remoteDescriptionSet = false; // Traccia quando remoteDescription è pronta
 
         this.config = {
-            iceServers: [
+            iceServers: iceServers /* [
                 { urls: "stun:stun.l.google.com:19302" },
                 { urls: "stun:stun1.l.google.com:19302" },
-                // TURN server - necessario per NAT restrittivi 
-                { 
-                    urls: "turn:openrelay.metered.ca:80",
-                    username: "openrelayproject",
-                    credential: "openrelayproject"
-                },
-                { 
-                    urls: "turn:openrelay.metered.ca:443",
-                    username: "openrelayproject",
-                    credential: "openrelayproject"
-                }
-            ],
+                
+            ], */,
             iceTransportPolicy: "all"  // Prova "relay" se tutto fallisce
         };
     }
@@ -56,7 +46,11 @@ class WebRTCService {
 
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
+                const candidateType = event.candidate.type; // "host", "srflx", "relay", "prflx"
+                console.log(`🔹 ICE Candidate Offerer (${candidateType}):`, event.candidate.candidate.substring(0, 80));
                 onIceCandidate(event.candidate);
+            } else {
+                console.log("✅ ICE gathering Offerer completato");
             }
         };
 
@@ -135,7 +129,11 @@ class WebRTCService {
 
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
+                const candidateType = event.candidate.type; // "host", "srflx", "relay", "prflx"
+                console.log(`🔹 ICE Candidate Answerer (${candidateType}):`, event.candidate.candidate.substring(0, 80));
                 onIceCandidate(event.candidate);
+            } else {
+                console.log("✅ ICE gathering Answerer completato");
             }
         };
 
@@ -319,5 +317,8 @@ class WebRTCService {
         this.pendingIceCandidates = []; // Pulisci buffer
     }
 }
+
+const response = await fetch("https://remotecontroller.metered.live/api/v1/turn/credentials?apiKey=90be0a20c5e40b78a12dc70cb03722defa78");
+const iceServers = await response.json();
 
 export default new WebRTCService(); // Singleton
