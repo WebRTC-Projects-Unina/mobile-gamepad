@@ -36,14 +36,6 @@ const DPad = ({ onInput }) => {
                 clearInterval(intervalRefs.current[direction]);
                 delete intervalRefs.current[direction];
             }
-            // Invia messaggio di rilascio
-            if (onInput) {
-                onInput('fast', { 
-                    type: 'DPAD', 
-                    key: direction, 
-                    pressed: false 
-                });
-            }
         }
     };
 
