@@ -41,6 +41,15 @@ class WebRTCService {
 
         this.peerConnection = new RTCPeerConnection(this.config);
 
+        // Monitor dello stato della connessione
+        this.peerConnection.onconnectionstatechange = () => {
+            console.log("⚡ Stato connessione P2P (Offerer):", this.peerConnection.connectionState);
+        };
+
+        this.peerConnection.oniceconnectionstatechange = () => {
+            console.log("🧊 Stato ICE (Offerer):", this.peerConnection.iceConnectionState);
+        };
+
         // Assicura che l'offerta includa un m-line audio per ricevere il microfono remoto
         this.peerConnection.addTransceiver("audio", { direction: "recvonly" });
 
@@ -51,7 +60,7 @@ class WebRTCService {
         };
 
         this.peerConnection.ontrack = (event) => {
-            console.log("Stream audio ricevuto!");
+            console.log("✅ Stream audio ricevuto!");
             onTrack(event.streams[0]);
         };
 
@@ -95,6 +104,15 @@ class WebRTCService {
 
         this.peerConnection = new RTCPeerConnection(this.config);
 
+        // Monitor dello stato della connessione
+        this.peerConnection.onconnectionstatechange = () => {
+            console.log("⚡ Stato connessione P2P (Answerer):", this.peerConnection.connectionState);
+        };
+
+        this.peerConnection.oniceconnectionstatechange = () => {
+            console.log("🧊 Stato ICE (Answerer):", this.peerConnection.iceConnectionState);
+        };
+
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
                 onIceCandidate(event.candidate);
@@ -103,13 +121,13 @@ class WebRTCService {
 
         this.peerConnection.ondatachannel = (event) => {
             const channel = event.channel;
-            console.log(`Data Channel ricevuto: ${channel.label}`);
+            console.log(`📡 Data Channel ricevuto: ${channel.label}`);
             
             channel.onopen = () => {
-                console.log(`Canale '${channel.label}' APERTO`);
+                console.log(`✅ Canale '${channel.label}' APERTO`);
                 onOpen();
             };            
-            channel.onclose = () => console.log(`Canale '${channel.label}' CHIUSO`);
+            channel.onclose = () => console.log(`❌ Canale '${channel.label}' CHIUSO`);
 
             // Salviamo il riferimento per poter rispondere se necessario
             if (channel.label === "fast") this.dataChannels.fast = channel;
