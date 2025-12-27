@@ -10,12 +10,36 @@ class WebRTCService {
         this.pendingIceCandidates = []; // Buffer candidati ICE in attesa di remoteDescription
         this.remoteDescriptionSet = false; // Traccia quando remoteDescription è pronta
 
+        iceServers
+
         this.config = {
-            iceServers: iceServers /* [
+            iceServers: [
                 { urls: "stun:stun.l.google.com:19302" },
-                { urls: "stun:stun1.l.google.com:19302" },
-                
-            ], */,
+                { urls: "stun:stun1.l.google.com:19302" },     
+                {
+                    urls: "stun:stun.relay.metered.ca:80",
+                },
+                {
+                    urls: "turn:standard.relay.metered.ca:80",
+                    username: "a6a2bb47a4c58323b684be60",
+                    credential: "P0fcHGiYULKJycoX",
+                },
+                {
+                    urls: "turn:standard.relay.metered.ca:80?transport=tcp",
+                    username: "a6a2bb47a4c58323b684be60",
+                    credential: "P0fcHGiYULKJycoX",
+                },
+                {
+                    urls: "turn:standard.relay.metered.ca:443",
+                    username: "a6a2bb47a4c58323b684be60",
+                    credential: "P0fcHGiYULKJycoX",
+                },
+                {
+                    urls: "turns:standard.relay.metered.ca:443?transport=tcp",
+                    username: "a6a2bb47a4c58323b684be60",
+                    credential: "P0fcHGiYULKJycoX",
+                },
+            ],
             iceTransportPolicy: "all"  // Prova "relay" se tutto fallisce
         };
     }
@@ -317,8 +341,5 @@ class WebRTCService {
         this.pendingIceCandidates = []; // Pulisci buffer
     }
 }
-
-const response = await fetch("https://remotecontroller.metered.live/api/v1/turn/credentials?apiKey=90be0a20c5e40b78a12dc70cb03722defa78");
-const iceServers = await response.json();
 
 export default new WebRTCService(); // Singleton
