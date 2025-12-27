@@ -12,7 +12,7 @@ class WebRTCService {
         this.config = {
             iceServers: [
                 { urls: "stun:stun.l.google.com:19302" },
-                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" }/*,
                 // TURN server - necessario per NAT restrittivi
                 { 
                     urls: "turn:openrelay.metered.ca:80",
@@ -23,7 +23,7 @@ class WebRTCService {
                     urls: "turn:openrelay.metered.ca:443",
                     username: "openrelayproject",
                     credential: "openrelayproject"
-                }
+                }*/
             ]
         };
     }
